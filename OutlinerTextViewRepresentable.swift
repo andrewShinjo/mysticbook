@@ -21,9 +21,7 @@ private let heightChangeThreshold: CGFloat = 0.5
 /// of the text it contains as the user types.
 struct OutlinerTextViewRepresentable: NSViewRepresentable {
 	
-	/// The measured height of the text view's content, updated as the text changes.
 	@Binding var height: CGFloat
-	/// The text being edited in the text view.
 	@Binding var text: String
 	
 	/// Creates the view object, and configures its initial state.
