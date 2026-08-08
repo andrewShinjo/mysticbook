@@ -7,6 +7,9 @@
 
 import SwiftUI
 
+private let chevronButtonWidth: CGFloat = 14
+private let bulletTopPadding: CGFloat = 5
+
 struct OutlinerRowView: View {
 	
 	@Binding var row: OutlinerRowModel
@@ -22,12 +25,12 @@ struct OutlinerRowView: View {
 					.rotationEffect(row.isExpanded ? .degrees(90) : .zero)
 			}
 			.buttonStyle(.plain)
-			.frame(width: 14)
+			.frame(width: chevronButtonWidth)
 			
 			// Bullet icon
 			Circle()
 				.frame(width: 5, height: 5)
-				.padding(.top, 5)
+				.padding(.top, bulletTopPadding)
 			
 			// Editable text view
 			OutlinerTextViewRepresentable(height: $row.height, text: $row.text)

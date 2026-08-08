@@ -8,9 +8,22 @@
 import AppKit
 import SwiftUI
 
+/// Point size of the outliner editor font.
+private let editorFontSize: CGFloat = 14
+
+/// Minimum height change, in points, that triggers a row-height update.
+private let heightChangeThreshold: CGFloat = 0.5
+
+/// A SwiftUI wrapper around an editable text view that reports its measured
+/// content height back to the row model.
+///
+/// Outliner rows rely on this to keep each row's height in sync with the height
+/// of the text it contains as the user types.
 struct OutlinerTextViewRepresentable: NSViewRepresentable {
 	
+	/// The measured height of the text view's content, updated as the text changes.
 	@Binding var height: CGFloat
+	/// The text being edited in the text view.
 	@Binding var text: String
 	
 	/// Creates the view object, and configures its initial state.
@@ -35,6 +48,7 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 		
 		// Inset is padding.
 		textView.textContainerInset = .zero
+		textView.font = .systemFont(ofSize: editorFontSize)
 		return textView
 	}
 	
@@ -46,24 +60,31 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 		}
 	}
 	
+	/// Creates the coordinator that mediates between the text view and SwiftUI.
 	func makeCoordinator() -> Coordinator {
 		Coordinator(self)
 	}
 	
+	/// The object that observes text changes and keeps the measured height in sync.
 	class Coordinator: NSObject, NSTextViewDelegate {
-		var parent: TextViewRepresentable
+		/// The owning representable, used to write text and height changes back to SwiftUI.
+		var parent: OutlinerTextViewRepresentable
+		/// The last height reported to SwiftUI, used to avoid redundant updates.
 		private var lastHeight: CGFloat = 0
 		
-		init(_ parent: TextViewRepresentable) {
+		/// Creates a coordinator for the given representable.
+		init(_ parent: OutlinerTextViewRepresentable) {
 			self.parent = parent
 		}
 
+		/// Called when the text view's content changes; updates the bound text and height.
 		func textDidChange(_ notification: Notification) {
 			guard let textView = notification.object as? NSTextView else { return }
 			parent.text = textView.string
 			syncHeight(for: textView)
 		}
 		
+		/// Measures the text view's content and publishes the height if it changed.
 		func syncHeight(for textView: NSTextView) {
 			guard let layoutManager = textView.layoutManager,
 						let textContainer = textView.textContainer else { return }
@@ -71,14 +92,14 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 			layoutManager.ensureLayout(for: textContainer)
 			
 			let contentHeight = ceil(layoutManager.usedRect(for: textContainer).height)
-			let font = textView.font ?? .systemFont(ofSize: 30)
+			let font = textView.font ?? .systemFont(ofSize: editorFontSize)
 			let lineHeight = ceil(font.ascender - font.descender + font.leading)
 			let height = max(contentHeight, lineHeight)
 			
 			DispatchQueue.main.async {
 				[weak self] in
 				guard let self else { return }
-				guard abs(height - lastHeight) > 0.5 else { return }
+				guard abs(height - lastHeight) > heightChangeThreshold else { return }
 				lastHeight = height
 				parent.height = height
 			}
