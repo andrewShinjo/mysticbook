@@ -22,16 +22,16 @@ struct OutlinerRowView: View {
 					.rotationEffect(row.isExpanded ? .degrees(90) : .zero)
 			}
 			.buttonStyle(.plain)
-			.frame(width: 14, height: 20)
+			.frame(width: 14)
 			
 			// Bullet icon
 			Circle()
 				.frame(width: 5, height: 5)
-				.padding(.top, 7.5)
+				.padding(.top, 5)
 			
 			// Editable text view
-			TextViewRepresentable(text: $row.text)
-				.frame(minHeight: 20)
+			OutlinerTextViewRepresentable(height: $row.height, text: $row.text)
+				.frame(height: row.height)
 		}
 		.padding(.vertical, 2)
 		.padding(.horizontal, 8)

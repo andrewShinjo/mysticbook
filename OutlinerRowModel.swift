@@ -13,5 +13,5 @@ struct OutlinerRowModel: Identifiable {
 	var depth: Int
 	var isExpanded: Bool
 	var hasChildren: Bool
-	var height: Int
+	var height: CGFloat
 }
