@@ -14,6 +14,7 @@ private let bulletSize: CGFloat = 5
 private let bulletTopPadding: CGFloat = 5
 private let rowVerticalPadding: CGFloat = 2
 private let rowHorizontalPadding: CGFloat = 8
+private let chevronExpandedAngle: Double = 90
 
 /// Renders a single outline row: an indent, an expand/collapse chevron, a bullet, and an editable text view.
 struct OutlinerRowView: View {
@@ -28,7 +29,7 @@ struct OutlinerRowView: View {
 			// Expand/collapse button
 			Button(action: { row.isExpanded.toggle() }) {
 				Image(systemName: "chevron.right")
-					.rotationEffect(row.isExpanded ? .degrees(90) : .zero)
+					.rotationEffect(row.isExpanded ? .degrees(chevronExpandedAngle) : .zero)
 			}
 			.buttonStyle(.plain)
 			.frame(width: chevronButtonWidth)

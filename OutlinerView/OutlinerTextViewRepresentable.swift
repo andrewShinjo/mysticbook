@@ -39,8 +39,8 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 		textView.textContainer?.widthTracksTextView = true
 		textView.textContainer?.size.height = .greatestFiniteMagnitude
 		
-		// The text view object controls the text container's height.
-		// We will manually control the text view's height with custom logic.
+		// The text view does not drive the container's height; the container is
+		// unbounded, and the view's height is set from measured content instead.
 		textView.textContainer?.heightTracksTextView = false
 		
 		// Inset is padding.
@@ -89,9 +89,9 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 			
 			layoutManager.ensureLayout(for: textContainer)
 			
-			let contentHeight = ceil(layoutManager.usedRect(for: textContainer).height)
+			let contentHeight = layoutManager.usedRect(for: textContainer).height
 			let font = textView.font ?? .systemFont(ofSize: editorFontSize)
-			let lineHeight = ceil(font.ascender - font.descender + font.leading)
+			let lineHeight = font.ascender - font.descender + font.leading
 			let height = max(contentHeight, lineHeight)
 			
 			DispatchQueue.main.async {

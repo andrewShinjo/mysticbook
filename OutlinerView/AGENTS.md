@@ -41,12 +41,14 @@ the row resizes to fit its text.
   depth, expansion state, and measured height; views are derived from it.
 - **Height is measured, never hardcoded.** The text view's height is derived
   from `layoutManager.usedRect`, clamped to at least one line. A 0.5 pt change
-  threshold avoids redundant height updates. The text container tracks the
-  text's height, and the representable controls the view's height with custom
-  logic; the view's height is owned by SwiftUI via `frame(height:)`.
+  threshold avoids redundant height updates. The container's height is fixed at
+  `.greatestFiniteMagnitude` (`heightTracksTextView = false`); the representable
+  measures the content and controls the view's height, owned by SwiftUI via
+  `frame(height:)`. Rows start at a hardcoded placeholder height
+  (`initialRowHeight`, 20 pt) until their first measurement arrives.
 - **Flat rows for now.** `rows` is a flat `[OutlinerRowModel]` rendered in a
   `LazyVStack`. If the outline becomes a true tree, the row model and the
   container will need to change together.
 - **Fixed geometry lives in named constants.** Indent width (16 pt per depth
-  level), chevron width, bullet size, and paddings are file-private constants,
-  not magic numbers.
+  level), chevron width, bullet size, paddings, and the chevron expand angle are
+  file-private constants, not magic numbers.
