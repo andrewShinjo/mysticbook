@@ -8,7 +8,6 @@
 import AppKit
 import SwiftUI
 
-/// Point size of the outliner editor font.
 private let editorFontSize: CGFloat = 14
 
 /// Minimum height change, in points, that triggers a row-height update.
@@ -65,9 +64,8 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 	
 	/// The object that observes text changes and keeps the measured height in sync.
 	class Coordinator: NSObject, NSTextViewDelegate {
-		/// The owning representable, used to write text and height changes back to SwiftUI.
-		var parent: OutlinerTextViewRepresentable
-		/// The last height reported to SwiftUI, used to avoid redundant updates.
+
+		private let parent: OutlinerTextViewRepresentable
 		private var lastHeight: CGFloat = 0
 		
 		/// Creates a coordinator for the given representable.
