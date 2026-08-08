@@ -7,17 +7,23 @@
 
 import SwiftUI
 
+private let rowSpacing: CGFloat = 4
+private let indentWidthPerDepth: CGFloat = 16
 private let chevronButtonWidth: CGFloat = 14
+private let bulletSize: CGFloat = 5
 private let bulletTopPadding: CGFloat = 5
+private let rowVerticalPadding: CGFloat = 2
+private let rowHorizontalPadding: CGFloat = 8
 
+/// Renders a single outline row: an indent, an expand/collapse chevron, a bullet, and an editable text view.
 struct OutlinerRowView: View {
 	
 	@Binding var row: OutlinerRowModel
 	
 	var body: some View {
-		HStack(alignment: .top, spacing: 4) {
+		HStack(alignment: .top, spacing: rowSpacing) {
 			
-			Spacer().frame(width: CGFloat(row.depth * 16))
+			Spacer().frame(width: CGFloat(row.depth) * indentWidthPerDepth)
 			
 			// Expand/collapse button
 			Button(action: { row.isExpanded.toggle() }) {
@@ -29,14 +35,14 @@ struct OutlinerRowView: View {
 			
 			// Bullet icon
 			Circle()
-				.frame(width: 5, height: 5)
+				.frame(width: bulletSize, height: bulletSize)
 				.padding(.top, bulletTopPadding)
 			
 			// Editable text view
 			OutlinerTextViewRepresentable(height: $row.height, text: $row.text)
 				.frame(height: row.height)
 		}
-		.padding(.vertical, 2)
-		.padding(.horizontal, 8)
+		.padding(.vertical, rowVerticalPadding)
+		.padding(.horizontal, rowHorizontalPadding)
 	}
 }

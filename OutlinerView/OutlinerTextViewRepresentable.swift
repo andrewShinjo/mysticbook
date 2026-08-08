@@ -66,6 +66,8 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 	class Coordinator: NSObject, NSTextViewDelegate {
 
 		private let parent: OutlinerTextViewRepresentable
+
+		/// The height most recently written to the binding, used to skip redundant updates.
 		private var lastHeight: CGFloat = 0
 		
 		/// Creates a coordinator for the given representable.
