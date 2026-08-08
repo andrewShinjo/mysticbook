@@ -10,22 +10,22 @@
 		1B3947983025867900677E29 /* mysticbookApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B3947973025867900677E29 /* mysticbookApp.swift */; };
 		1B39479A3025867900677E29 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B3947993025867900677E29 /* ContentView.swift */; };
 		1B39479C3025867A00677E29 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1B39479B3025867A00677E29 /* Assets.xcassets */; };
-		1B3947AC3025975B00677E29 /* OutlinerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B3947AB3025975900677E29 /* OutlinerView.swift */; };
-		1B3947AE302597DC00677E29 /* TextViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B3947AD302597D900677E29 /* TextViewRepresentable.swift */; };
-		1B3947B030259AA900677E29 /* OutlinerRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B3947AF30259AA700677E29 /* OutlinerRowView.swift */; };
-		1B3947B230259CD200677E29 /* OutlinerRowModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B3947B130259CCB00677E29 /* OutlinerRowModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1B3947943025867900677E29 /* mysticbook.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = mysticbook.app; path = /Users/ashinjo/Documents/andylabs/src/mysticbook/build/Debug/mysticbook.app; sourceTree = "<absolute>"; };
+		1B1B55EB3026D48400908E61 /* mysticbook.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = mysticbook.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1B3947973025867900677E29 /* mysticbookApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mysticbookApp.swift; sourceTree = "<group>"; };
 		1B3947993025867900677E29 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		1B39479B3025867A00677E29 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		1B3947AB3025975900677E29 /* OutlinerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlinerView.swift; sourceTree = "<group>"; };
-		1B3947AD302597D900677E29 /* TextViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextViewRepresentable.swift; sourceTree = "<group>"; };
-		1B3947AF30259AA700677E29 /* OutlinerRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlinerRowView.swift; sourceTree = "<group>"; };
-		1B3947B130259CCB00677E29 /* OutlinerRowModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlinerRowModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		1B1B55EE3027AEA300908E61 /* OutlinerView */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = OutlinerView;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		1B3947913025867900677E29 /* Frameworks */ = {
@@ -41,13 +41,11 @@
 		1B39478B3025867900677E29 = {
 			isa = PBXGroup;
 			children = (
-				1B3947AB3025975900677E29 /* OutlinerView.swift */,
-				1B3947AF30259AA700677E29 /* OutlinerRowView.swift */,
-				1B3947B130259CCB00677E29 /* OutlinerRowModel.swift */,
-				1B3947AD302597D900677E29 /* TextViewRepresentable.swift */,
+				1B1B55EE3027AEA300908E61 /* OutlinerView */,
 				1B39479B3025867A00677E29 /* Assets.xcassets */,
 				1B3947993025867900677E29 /* ContentView.swift */,
 				1B3947973025867900677E29 /* mysticbookApp.swift */,
+				1B1B55EB3026D48400908E61 /* mysticbook.app */,
 			);
 			sourceTree = "<group>";
 		};
@@ -66,11 +64,14 @@
 			);
 			dependencies = (
 			);
+			fileSystemSynchronizedGroups = (
+				1B1B55EE3027AEA300908E61 /* OutlinerView */,
+			);
 			name = mysticbook;
 			packageProductDependencies = (
 			);
 			productName = mysticbook;
-			productReference = 1B3947943025867900677E29 /* mysticbook.app */;
+			productReference = 1B1B55EB3026D48400908E61 /* mysticbook.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -123,12 +124,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1B3947B030259AA900677E29 /* OutlinerRowView.swift in Sources */,
 				1B39479A3025867900677E29 /* ContentView.swift in Sources */,
 				1B3947983025867900677E29 /* mysticbookApp.swift in Sources */,
-				1B3947AE302597DC00677E29 /* TextViewRepresentable.swift in Sources */,
-				1B3947B230259CD200677E29 /* OutlinerRowModel.swift in Sources */,
-				1B3947AC3025975B00677E29 /* OutlinerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

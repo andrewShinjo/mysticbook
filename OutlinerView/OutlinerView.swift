@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+/// A placeholder height, in points, used for a row before it is measured.
+private let initialRowHeight: CGFloat = 20
+
+/// The editable outline: a scrollable list of rows, each rendered by `OutlinerRowView`.
 struct OutlinerView: View {
 	
 	@State private var rows: [OutlinerRowModel] = [
@@ -15,7 +19,7 @@ struct OutlinerView: View {
 			depth: 0,
 			isExpanded: false,
 			hasChildren: false,
-			height: 20
+			height: initialRowHeight
 		)
 	]
 	
