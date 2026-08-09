@@ -25,6 +25,8 @@ struct OutlinerRowView: View {
 	
 	var onInsertNewRow: ((UUID, NSTextView) -> Void)?
 	
+	var onDeleteRow: ((UUID) -> Void)?
+	
 	var body: some View {
 		HStack(alignment: .top, spacing: rowSpacing) {
 			
@@ -50,6 +52,9 @@ struct OutlinerRowView: View {
 				isFocused: isFocused,
 				onInsertNewRow: {
 					textView in onInsertNewRow?(row.id, textView)
+				},
+				onDeleteRow: {
+					_ in onDeleteRow?(row.id)
 				},
 			)
 				.frame(height: row.height)
