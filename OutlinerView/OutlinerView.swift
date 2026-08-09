@@ -57,7 +57,13 @@ struct OutlinerView: View {
 			height: initialRowHeight
 		)
 		
-		rows.insert(newRow, at: index + 1)
+		// Insert the new row after the row's descendants so they stay under
+		// the original row instead of being stolen by the new row.
+		var insertIndex = index + 1
+		while insertIndex < rows.count && rows[insertIndex].depth > row.depth {
+			insertIndex += 1
+		}
+		rows.insert(newRow, at: insertIndex)
 		
 		refreshHasChildren()
 		
@@ -104,6 +110,18 @@ struct OutlinerView: View {
 		}
 		
 		let oldDepth = rows[index].depth
+		
+		// A row can be indented only when the row that would become its parent
+		// sits directly above it and is exactly one depth level shallower than
+		// the row's new depth. The would-be parent is the nearest row above
+		// whose depth is at most `oldDepth`; it must be exactly `oldDepth`.
+		let parentCandidate = rows[..<index].last(where: {
+			$0.depth <= oldDepth
+		})
+		guard parentCandidate?.depth == oldDepth else {
+			return
+		}
+		
 		rows[index].depth = oldDepth + 1
 		shiftDescendantDepths(from: index + 1, deeperThan: oldDepth, by: 1)
 		
