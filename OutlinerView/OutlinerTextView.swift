@@ -19,6 +19,12 @@ final class OutlinerTextView: NSTextView {
 	/// Invoked when the backspace or forward-delete key is pressed with the cursor at position 0.
 	var onDeleteRow: (() -> Void)?
 	
+	/// Invoked when the Tab key is pressed.
+	var onIndentRow: (() -> Void)?
+	
+	/// Invoked when Shift+Tab is pressed.
+	var onOutdentRow: (() -> Void)?
+	
 	/// Invoked after each layout pass of the text view.
 	var onLayout: (() -> Void)?
 	
@@ -67,6 +73,21 @@ final class OutlinerTextView: NSTextView {
 		else {
 			super.deleteForward(sender)
 		}
+		
+	}
+	
+	/// Handles the Tab key press.
+	override func insertTab(_ sender: Any?) {
+		
+		// Indent the row instead of inserting a tab character into the text.
+		onIndentRow?()
+		
+	}
+	
+	/// Handles the Shift+Tab key press.
+	override func insertBacktab(_ sender: Any?) {
+		
+		onOutdentRow?()
 		
 	}
 	
