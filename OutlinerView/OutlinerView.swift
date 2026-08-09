@@ -33,8 +33,8 @@ struct OutlinerView: View {
 		)
 	]
 	
-	/// A one-shot focus signal: set to the newly inserted row's id so it becomes
-	/// first responder, then cleared by `onChange(of: focusedRowId)`.
+	/// The id of the row whose text view currently holds first responder; `nil`
+	/// when no row is focused.
 	@State
 	private var focusedRowId: UUID?
 	
@@ -162,6 +162,17 @@ struct OutlinerView: View {
 		refreshHasChildren()
 	}
 	
+	/// Tracks focus: records the focused row, and clears it only when the
+	/// currently focused row resigns.
+	private func updateFocus(for rowId: UUID, focused: Bool) {
+		if focused {
+			focusedRowId = rowId
+		}
+		else if focusedRowId == rowId {
+			focusedRowId = nil
+		}
+	}
+	
 	/// Shifts the depth of consecutive rows beginning at `startIndex` whose
 	/// depth is greater than `parentDepth`, stopping at the first row whose
 	/// depth is at most `parentDepth`.
@@ -221,17 +232,15 @@ struct OutlinerView: View {
 						row: $row,
 						isRoot: row.depth == rootRowDepth,
 						isFocused: row.id == focusedRowId,
+						onFocusChange: {
+							updateFocus(for: row.id, focused: $0)
+						},
 						onInsertNewRow: insertNewRow,
 						onDeleteRow: deleteRow,
 						onIndentRow: indentRow,
 						onOutdentRow: outdentRow
 					)
 				}
-			}
-		}
-		.onChange(of: focusedRowId) { _, newValue in
-			if newValue != nil {
-				focusedRowId = nil
 			}
 		}
 	}
