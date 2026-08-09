@@ -62,6 +62,28 @@ struct OutlinerView: View {
 		focusedRowId = newRow.id
 	}
 	
+	/// Removes the row with the given id, and moves focus to the row above it.
+	private func deleteRow(_ rowId: UUID) {
+		
+		guard let index = rows.firstIndex(where: {
+			$0.id == rowId
+		}) else {
+			return
+		}
+		
+		// Keep the outline from ever becoming empty.
+		guard rows.count > 1 else { return }
+		
+		rows.remove(at: index)
+		
+		let predecessorIndex = index - 1
+		let targetRow = predecessorIndex >= 0
+			? rows[predecessorIndex]
+			: rows[index]
+		
+		focusedRowId = targetRow.id
+	}
+	
 	var body: some View {
 		ScrollView {
 			LazyVStack(alignment: .leading, spacing: 0) {
@@ -70,7 +92,8 @@ struct OutlinerView: View {
 					OutlinerRowView(
 						row: $row,
 						isFocused: row.id == focusedRowId,
-						onInsertNewRow: insertNewRow
+						onInsertNewRow: insertNewRow,
+						onDeleteRow: deleteRow
 					)
 				}
 			}

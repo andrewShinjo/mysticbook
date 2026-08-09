@@ -27,6 +27,8 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 	
 	var onInsertNewRow: ((NSTextView) -> Void)?
 	
+	var onDeleteRow: ((NSTextView) -> Void)?
+	
 	/// Creates the view object, and configures its initial state.
 	func makeNSView(context: Context) -> NSTextView {
 		
@@ -35,6 +37,11 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 		textView.onInsertNewline = { [weak textView] in
 			guard let textView else { return }
 			context.coordinator.onInsertNewRow?(textView)
+		}
+		
+		textView.onDeleteRow = { [weak textView] in
+			guard let textView else { return }
+			context.coordinator.onDeleteRow?(textView)
 		}
 		
 		textView.onLayout = { [weak textView] in
@@ -62,6 +69,7 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 	func updateNSView(_ nsView: NSTextView, context: Context) {
 		
 		context.coordinator.onInsertNewRow = onInsertNewRow
+		context.coordinator.onDeleteRow = onDeleteRow
 		
 		if nsView.string != text {
 			nsView.string = text
@@ -96,6 +104,8 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 		private var lastHeight: CGFloat = 0
 		
 		var onInsertNewRow: ((NSTextView) -> Void)?
+		
+		var onDeleteRow: ((NSTextView) -> Void)?
 		
 		/// Creates a coordinator for the given representable.
 		init(_ parent: OutlinerTextViewRepresentable) {
