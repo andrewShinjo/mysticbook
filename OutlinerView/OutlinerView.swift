@@ -18,7 +18,7 @@ struct OutlinerView: View {
 		OutlinerRowModel(
 			text: "Hello",
 			depth: 0,
-			isExpanded: false,
+			isExpanded: true,
 			hasChildren: false,
 			height: initialRowHeight
 		)
@@ -52,12 +52,14 @@ struct OutlinerView: View {
 		let newRow = OutlinerRowModel(
 			text: after,
 			depth: row.depth,
-			isExpanded: false,
+			isExpanded: true,
 			hasChildren: false,
 			height: initialRowHeight
 		)
 		
 		rows.insert(newRow, at: index + 1)
+		
+		refreshHasChildren()
 		
 		focusedRowId = newRow.id
 	}
@@ -87,6 +89,8 @@ struct OutlinerView: View {
 			? rows[predecessorIndex]
 			: rows[index]
 		
+		refreshHasChildren()
+		
 		focusedRowId = targetRow.id
 	}
 	
@@ -102,6 +106,8 @@ struct OutlinerView: View {
 		let oldDepth = rows[index].depth
 		rows[index].depth = oldDepth + 1
 		shiftDescendantDepths(from: index + 1, deeperThan: oldDepth, by: 1)
+		
+		refreshHasChildren()
 	}
 	
 	/// Decreases the depth of the row with the given id, along with its descendants.
@@ -118,6 +124,8 @@ struct OutlinerView: View {
 		let oldDepth = rows[index].depth
 		rows[index].depth = oldDepth - 1
 		shiftDescendantDepths(from: index + 1, deeperThan: oldDepth, by: -1)
+		
+		refreshHasChildren()
 	}
 	
 	/// Shifts the depth of consecutive rows beginning at `startIndex` whose
@@ -136,10 +144,44 @@ struct OutlinerView: View {
 		}
 	}
 	
+	/// Recomputes each row's `hasChildren` from the flat structure: a row has
+	/// children when the row below it is deeper than it.
+	private func refreshHasChildren() {
+		for index in rows.indices {
+			rows[index].hasChildren = index + 1 < rows.count
+				&& rows[index + 1].depth > rows[index].depth
+		}
+	}
+	
+	/// The row bindings to render: consecutive rows whose depth is greater than
+	/// the nearest collapsed ancestor's depth are hidden until it expands.
+	private var visibleRowBindings: [Binding<OutlinerRowModel>] {
+		
+		var collapsedDepth: Int?
+		var result: [Binding<OutlinerRowModel>] = []
+		
+		for binding in Array($rows) {
+			let row = binding.wrappedValue
+			
+			if let depth = collapsedDepth, row.depth > depth {
+				continue
+			}
+			
+			collapsedDepth = nil
+			result.append(binding)
+			
+			if row.hasChildren && !row.isExpanded {
+				collapsedDepth = row.depth
+			}
+		}
+		
+		return result
+	}
+	
 	var body: some View {
 		ScrollView {
 			LazyVStack(alignment: .leading, spacing: 0) {
-				ForEach($rows) {
+				ForEach(visibleRowBindings, id: \.wrappedValue.id) {
 					$row in
 					OutlinerRowView(
 						row: $row,

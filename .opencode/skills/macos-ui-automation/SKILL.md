@@ -58,8 +58,12 @@ For this app each row is a pair of elements inside
 `window → first UI element (group) → first UI element (AXScrollArea) → first UI
 element (AXOpaqueProviderGroup)`, in document order:
 
-- `AXButton` — the expand/collapse chevron.
+- `AXButton` — the expand/collapse chevron. Only present on rows that have
+  children; leaf rows reserve the slot with a blank spacer and expose no button.
 - `AXTextArea` — the editable `NSTextView`; its `value` is the row's text.
+
+Collapsing a row removes its descendants' `AXTextArea`s from the tree until it
+is expanded again.
 
 For unknown hierarchies, walk recursively: `every UI element of X`, reading
 `role`/`description` at each level until you find `AXTextArea` (or the element

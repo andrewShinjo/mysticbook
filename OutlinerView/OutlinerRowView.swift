@@ -37,12 +37,18 @@ struct OutlinerRowView: View {
 			Spacer().frame(width: CGFloat(row.depth) * indentWidthPerDepth)
 			
 			// Expand/collapse button
-			Button(action: { row.isExpanded.toggle() }) {
-				Image(systemName: "chevron.right")
-					.rotationEffect(row.isExpanded ? .degrees(chevronExpandedAngle) : .zero)
+			if row.hasChildren {
+				Button(action: { row.isExpanded.toggle() }) {
+					Image(systemName: "chevron.right")
+						.rotationEffect(row.isExpanded ? .degrees(chevronExpandedAngle) : .zero)
+				}
+				.buttonStyle(.plain)
+				.frame(width: chevronButtonWidth)
 			}
-			.buttonStyle(.plain)
-			.frame(width: chevronButtonWidth)
+			else {
+				// Reserve the chevron's width so bullets and text stay aligned.
+				Spacer().frame(width: chevronButtonWidth)
+			}
 			
 			// Bullet icon
 			Circle()
