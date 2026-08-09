@@ -12,6 +12,10 @@ private let indentWidthPerDepth: CGFloat = 16
 private let chevronButtonWidth: CGFloat = 14
 private let bulletSize: CGFloat = 5
 private let bulletTopPadding: CGFloat = 5
+/// Opacity of a row's bullet while hovered; dimmer than the focused bullet.
+private let bulletHoveredOpacity: CGFloat = 0.5
+/// Duration of the bullet's fade-in/fade-out animation.
+private let bulletFadeDuration: Double = 0.2
 private let rowVerticalPadding: CGFloat = 2
 private let rowHorizontalPadding: CGFloat = 8
 private let chevronExpandedAngle: Double = 90
@@ -30,6 +34,11 @@ struct OutlinerRowView: View {
 	var isRoot: Bool
 	
 	var isFocused: Bool
+	
+	@State
+	private var isHovered = false
+	
+	var onFocusChange: ((Bool) -> Void)?
 	
 	var onInsertNewRow: ((UUID, NSTextView) -> Void)?
 	
@@ -60,11 +69,15 @@ struct OutlinerRowView: View {
 				Spacer().frame(width: chevronButtonWidth)
 			}
 			
-			// Bullet icon; the root row has no bullet.
+			// Bullet icon; the root row has no bullet. Hidden until hovered or
+			// focused, and dimmer while hovered than while focused.
 			if !isRoot {
 				Circle()
+					.opacity(isHovered || isFocused ? (isFocused ? 1 : bulletHoveredOpacity) : 0)
 					.frame(width: bulletSize, height: bulletSize)
 					.padding(.top, bulletTopPadding)
+					.animation(.easeInOut(duration: bulletFadeDuration), value: isHovered)
+					.animation(.easeInOut(duration: bulletFadeDuration), value: isFocused)
 			}
 			
 			// Editable text view
@@ -74,6 +87,7 @@ struct OutlinerRowView: View {
 				fontSize: isRoot ? rootFontSize : editorFontSize,
 				isBold: isRoot,
 				isFocused: isFocused,
+				onFocusChange: onFocusChange,
 				onInsertNewRow: {
 					textView in onInsertNewRow?(row.id, textView)
 				},
@@ -91,5 +105,8 @@ struct OutlinerRowView: View {
 		}
 		.padding(.vertical, rowVerticalPadding)
 		.padding(.horizontal, rowHorizontalPadding)
+		.frame(maxWidth: .infinity, alignment: .leading)
+		.contentShape(Rectangle())
+		.onHover { isHovered = $0 }
 	}
 }

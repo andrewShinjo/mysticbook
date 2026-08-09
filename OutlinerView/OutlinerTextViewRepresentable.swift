@@ -31,6 +31,9 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 	
 	var isFocused: Bool
 	
+	/// Called when the text view gains or loses first responder status.
+	var onFocusChange: ((Bool) -> Void)?
+	
 	var onInsertNewRow: ((NSTextView) -> Void)?
 	
 	var onDeleteRow: ((NSTextView) -> Void)?
@@ -67,6 +70,11 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 			context.coordinator.syncHeight(for: textView)
 		}
 		
+		textView.onFocusChange = { [weak textView] focused in
+			guard let textView else { return }
+			context.coordinator.onFocusChange?(focused)
+		}
+		
 		textView.delegate = context.coordinator
 		textView.isHorizontallyResizable = false
 		textView.isVerticallyResizable = true
@@ -99,6 +107,7 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 		context.coordinator.onDeleteRow = onDeleteRow
 		context.coordinator.onIndentRow = onIndentRow
 		context.coordinator.onOutdentRow = onOutdentRow
+		context.coordinator.onFocusChange = onFocusChange
 		
 		if nsView.string != text {
 			nsView.string = text
@@ -133,6 +142,8 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 		private var lastHeight: CGFloat = 0
 		
 		var onInsertNewRow: ((NSTextView) -> Void)?
+		
+		var onFocusChange: ((Bool) -> Void)?
 		
 		var onDeleteRow: ((NSTextView) -> Void)?
 		

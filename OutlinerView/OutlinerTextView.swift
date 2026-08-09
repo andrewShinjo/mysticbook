@@ -28,6 +28,9 @@ final class OutlinerTextView: NSTextView {
 	/// Invoked after each layout pass of the text view.
 	var onLayout: (() -> Void)?
 	
+	/// Invoked when the text view gains or loses first responder status.
+	var onFocusChange: ((Bool) -> Void)?
+	
 	/// Handles the Return key press.
 	override func insertNewline(_ sender: Any?) {
 		
@@ -95,5 +98,23 @@ final class OutlinerTextView: NSTextView {
 	override func layout() {
 		super.layout()
 		onLayout?()
+	}
+	
+	/// Reports to `onFocusChange` when the text view becomes first responder.
+	override func becomeFirstResponder() -> Bool {
+		let became = super.becomeFirstResponder()
+		if became {
+			onFocusChange?(true)
+		}
+		return became
+	}
+	
+	/// Reports to `onFocusChange` when the text view resigns first responder.
+	override func resignFirstResponder() -> Bool {
+		let resigned = super.resignFirstResponder()
+		if resigned {
+			onFocusChange?(false)
+		}
+		return resigned
 	}
 }
