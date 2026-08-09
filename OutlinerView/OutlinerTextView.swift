@@ -100,8 +100,18 @@ final class OutlinerTextView: NSTextView {
 		onLayout?()
 	}
 	
+	/// Whether this row is the row SwiftUI intends to be focused.
+	var isRowFocused = false
+	
 	/// Reports to `onFocusChange` when the text view becomes first responder.
 	override func becomeFirstResponder() -> Bool {
+		// When the window is first brought onscreen, AppKit auto-focuses the
+		// first key view (the root row). Reject that so no row is focused when
+		// the app opens; real clicks (an event is in flight) and SwiftUI-driven
+		// focus (the row is flagged) still succeed.
+		guard isRowFocused || NSApp.currentEvent != nil else {
+			return false
+		}
 		let became = super.becomeFirstResponder()
 		if became {
 			onFocusChange?(true)

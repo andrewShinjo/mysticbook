@@ -103,6 +103,10 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 		// shifts (e.g. deleting a row above).
 		context.coordinator.parent = self
 		
+		// Sync SwiftUI's focus intent into the text view before the async
+		// makeFirstResponder below runs, so programmatic focus is allowed.
+		(nsView as? OutlinerTextView)?.isRowFocused = isFocused
+		
 		context.coordinator.onInsertNewRow = onInsertNewRow
 		context.coordinator.onDeleteRow = onDeleteRow
 		context.coordinator.onIndentRow = onIndentRow
