@@ -23,10 +23,19 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 	@Binding var height: CGFloat
 	@Binding var text: String
 	
+	var isFocused: Bool
+	
+	var onInsertNewRow: ((NSTextView) -> Void)?
+	
 	/// Creates the view object, and configures its initial state.
 	func makeNSView(context: Context) -> NSTextView {
 		
 		let textView = OutlinerTextView()
+		
+		textView.onInsertNewline = { [weak textView] in
+			guard let textView else { return }
+			context.coordinator.onInsertNewRow?(textView)
+		}
 		
 		textView.onLayout = { [weak textView] in
 			guard let textView else { return }
@@ -51,10 +60,26 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 	
 	/// Updates the view's state with new info from SwiftUI.
 	func updateNSView(_ nsView: NSTextView, context: Context) {
+		
+		context.coordinator.onInsertNewRow = onInsertNewRow
+		
 		if nsView.string != text {
 			nsView.string = text
+			nsView.setSelectedRange(NSRange(location: 0, length: 0))
 			context.coordinator.syncHeight(for: nsView)
 		}
+		
+		if isFocused {
+			DispatchQueue.main.async {
+				guard let window = nsView.window, window.firstResponder !== nsView
+				else {
+					return
+				}
+				
+				window.makeFirstResponder(nsView)
+			}
+		}
+														
 	}
 	
 	/// Creates the coordinator that mediates between the text view and SwiftUI.
@@ -69,6 +94,8 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 
 		/// The height most recently written to the binding, used to skip redundant updates.
 		private var lastHeight: CGFloat = 0
+		
+		var onInsertNewRow: ((NSTextView) -> Void)?
 		
 		/// Creates a coordinator for the given representable.
 		init(_ parent: OutlinerTextViewRepresentable) {
