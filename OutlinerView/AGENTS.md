@@ -35,11 +35,19 @@ OutlinerView                     owns rows: [OutlinerRowModel]
   coordinator relays up to `OutlinerView.insertNewRow(in:textView:)`. That
   splits the row's text at the cursor, inserts a new sibling row below it, and
   sets `focusedRowId` to move focus to the new row.
+- Pressing the backspace or forward-delete key with the cursor at position 0
+  (no selection) fires `onDeleteRow`, which the coordinator relays up to
+  `OutlinerView.deleteRow`. That removes the row, keeps the outline from ever
+  becoming empty (`rows.count > 1`), and sets `focusedRowId` to the row above
+  (or to the row below when the first row is removed).
 
-Height-syncing and Return-key row insertion are the current focus of active
-work. As the user types, the measured text height flows back up the chain and
-is written to `row.height`, so the row resizes to fit its text. Pressing Return
-splits the row at the cursor into two rows, and focus moves to the new row.
+Height-syncing, Return-key row insertion, and backspace/delete row removal are
+the current focus of active work. As the user types, the measured text height
+flows back up the chain and is written to `row.height`, so the row resizes to
+fit its text. Pressing Return splits the row at the cursor into two rows, and
+focus moves to the new row. Pressing backspace or forward-delete at the start
+of a row removes that row, and focus moves to the row above (or below, for the
+first row).
 
 ## Key design notes
 

@@ -16,7 +16,7 @@ final class OutlinerTextView: NSTextView {
 	/// Invoked when Return key is pressed without Shift.
 	var onInsertNewline: (() -> Void)?
 	
-	/// Invoked when the Delete key is pressed with the cursor at position 0.
+	/// Invoked when the backspace or forward-delete key is pressed with the cursor at position 0.
 	var onDeleteRow: (() -> Void)?
 	
 	/// Invoked after each layout pass of the text view.
@@ -54,13 +54,13 @@ final class OutlinerTextView: NSTextView {
 		
 	}
 	
-	/// Handles the Delete key press.
+	/// Handles the forward-delete key press.
 	override func deleteForward(_ sender: Any?) {
 		
 		let range = selectedRange()
 		
 		// When the cursor sits at position 0 with no selection, forward-delete
-		// would do nothing useful; delete the whole row instead.
+		// would delete the row's first character; delete the whole row instead.
 		if range.location == 0 && range.length == 0 {
 			onDeleteRow?()
 		}

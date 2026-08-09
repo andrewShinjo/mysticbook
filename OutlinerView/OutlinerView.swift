@@ -62,7 +62,8 @@ struct OutlinerView: View {
 		focusedRowId = newRow.id
 	}
 	
-	/// Removes the row with the given id, and moves focus to the row above it.
+	/// Removes the row with the given id, and moves focus to the row above it,
+	/// or to the row below it when the first row is removed.
 	private func deleteRow(_ rowId: UUID) {
 		
 		guard let index = rows.firstIndex(where: {
