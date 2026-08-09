@@ -29,6 +29,10 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 	
 	var onDeleteRow: ((NSTextView) -> Void)?
 	
+	var onIndentRow: (() -> Void)?
+	
+	var onOutdentRow: (() -> Void)?
+	
 	/// Creates the view object, and configures its initial state.
 	func makeNSView(context: Context) -> NSTextView {
 		
@@ -42,6 +46,14 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 		textView.onDeleteRow = { [weak textView] in
 			guard let textView else { return }
 			context.coordinator.onDeleteRow?(textView)
+		}
+		
+		textView.onIndentRow = {
+			context.coordinator.onIndentRow?()
+		}
+		
+		textView.onOutdentRow = {
+			context.coordinator.onOutdentRow?()
 		}
 		
 		textView.onLayout = { [weak textView] in
@@ -68,8 +80,16 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 	/// Updates the view's state with new info from SwiftUI.
 	func updateNSView(_ nsView: NSTextView, context: Context) {
 		
+		// Refresh the coordinator's parent so its bindings track the row's
+		// current storage. Keeping the struct captured at makeCoordinator would
+		// leave stale bindings pointing at a different row after the rows array
+		// shifts (e.g. deleting a row above).
+		context.coordinator.parent = self
+		
 		context.coordinator.onInsertNewRow = onInsertNewRow
 		context.coordinator.onDeleteRow = onDeleteRow
+		context.coordinator.onIndentRow = onIndentRow
+		context.coordinator.onOutdentRow = onOutdentRow
 		
 		if nsView.string != text {
 			nsView.string = text
@@ -98,7 +118,7 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 	/// The object that observes text changes and keeps the measured height in sync.
 	class Coordinator: NSObject, NSTextViewDelegate {
 
-		private let parent: OutlinerTextViewRepresentable
+		fileprivate var parent: OutlinerTextViewRepresentable
 
 		/// The height most recently written to the binding, used to skip redundant updates.
 		private var lastHeight: CGFloat = 0
@@ -106,6 +126,10 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 		var onInsertNewRow: ((NSTextView) -> Void)?
 		
 		var onDeleteRow: ((NSTextView) -> Void)?
+		
+		var onIndentRow: (() -> Void)?
+		
+		var onOutdentRow: (() -> Void)?
 		
 		/// Creates a coordinator for the given representable.
 		init(_ parent: OutlinerTextViewRepresentable) {

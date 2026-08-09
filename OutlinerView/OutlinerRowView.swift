@@ -27,6 +27,10 @@ struct OutlinerRowView: View {
 	
 	var onDeleteRow: ((UUID) -> Void)?
 	
+	var onIndentRow: ((UUID) -> Void)?
+	
+	var onOutdentRow: ((UUID) -> Void)?
+	
 	var body: some View {
 		HStack(alignment: .top, spacing: rowSpacing) {
 			
@@ -55,6 +59,12 @@ struct OutlinerRowView: View {
 				},
 				onDeleteRow: {
 					_ in onDeleteRow?(row.id)
+				},
+				onIndentRow: {
+					onIndentRow?(row.id)
+				},
+				onOutdentRow: {
+					onOutdentRow?(row.id)
 				},
 			)
 				.frame(height: row.height)

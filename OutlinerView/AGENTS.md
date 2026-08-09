@@ -27,7 +27,10 @@ OutlinerView                     owns rows: [OutlinerRowModel]
 - `OutlinerView` is the single owner of row state. Each `OutlinerRowView` binds
   to one row and derives its layout from the model.
 - `OutlinerTextViewRepresentable` wraps the AppKit text view and mediates all
-  communication with SwiftUI through its `Coordinator`.
+  communication with SwiftUI through its `Coordinator`. The coordinator
+  refreshes its stored `parent` on every `updateNSView`; holding the struct
+  captured at `makeCoordinator` would leave stale `@Binding`s pointing at a
+  different row after the rows array shifts (e.g. deleting a row above).
 - `OutlinerTextView` is an `NSTextView` subclass that invokes `onLayout` after
   each layout pass. The representable uses this callback to re-measure the
   content.
@@ -38,16 +41,26 @@ OutlinerView                     owns rows: [OutlinerRowModel]
 - Pressing the backspace or forward-delete key with the cursor at position 0
   (no selection) fires `onDeleteRow`, which the coordinator relays up to
   `OutlinerView.deleteRow`. That removes the row, keeps the outline from ever
-  becoming empty (`rows.count > 1`), and sets `focusedRowId` to the row above
-  (or to the row below when the first row is removed).
+  becoming empty (`rows.count > 1`), promotes the row's descendants one level
+  (they become siblings of its former siblings), and sets `focusedRowId` to the
+  row above (or to the row below when the first row is removed).
+- Pressing Tab fires `onIndentRow`, and pressing Shift+Tab fires
+  `onOutdentRow`, which the coordinator relays up to
+  `OutlinerView.indentRow`/`outdentRow`. Both change the row's depth by one
+  level and cascade that change to the row's descendants: consecutive rows
+  below it whose depth is greater than the row's depth before the edit, until a
+  row of equal or shallower depth stops the walk. Outdenting is a no-op at
+  depth 0.
 
-Height-syncing, Return-key row insertion, and backspace/delete row removal are
-the current focus of active work. As the user types, the measured text height
-flows back up the chain and is written to `row.height`, so the row resizes to
-fit its text. Pressing Return splits the row at the cursor into two rows, and
-focus moves to the new row. Pressing backspace or forward-delete at the start
-of a row removes that row, and focus moves to the row above (or below, for the
-first row).
+Height-syncing, Return-key row insertion, backspace/delete row removal, and
+Tab/Shift+Tab indentation are the current focus of active work. As the user
+types, the measured text height flows back up the chain and is written to
+`row.height`, so the row resizes to fit its text. Pressing Return splits the
+row at the cursor into two rows, and focus moves to the new row. Pressing
+backspace or forward-delete at the start of a row removes that row (promoting
+its descendants one level), and focus moves to the row above (or below, for the
+first row). Pressing Tab or Shift+Tab
+changes the row's depth, moving its descendants with it.
 
 ## Key design notes
 
