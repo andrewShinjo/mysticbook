@@ -51,16 +51,27 @@ OutlinerView                     owns rows: [OutlinerRowModel]
   below it whose depth is greater than the row's depth before the edit, until a
   row of equal or shallower depth stops the walk. Outdenting is a no-op at
   depth 0.
+- Each row's expand/collapse chevron is rendered only when the row has
+  children (`hasChildren`); leaf rows reserve the chevron's width with a blank
+  spacer so bullets and text stay aligned. Clicking a parent's chevron toggles
+  `isExpanded`. `OutlinerView.visibleRowBindings` walks the flat rows, tracks
+  the depth of the nearest collapsed ancestor, and drops any row deeper than
+  it, so collapsing a row hides its descendants from display without touching
+  the underlying array. `hasChildren` is recomputed by `refreshHasChildren`
+  after every structural edit (insert, delete, indent, outdent). Rows default
+  to expanded (`isExpanded: true`) so a newly indented child never disappears
+  under a parent it has just gained.
 
-Height-syncing, Return-key row insertion, backspace/delete row removal, and
-Tab/Shift+Tab indentation are the current focus of active work. As the user
-types, the measured text height flows back up the chain and is written to
-`row.height`, so the row resizes to fit its text. Pressing Return splits the
-row at the cursor into two rows, and focus moves to the new row. Pressing
-backspace or forward-delete at the start of a row removes that row (promoting
-its descendants one level), and focus moves to the row above (or below, for the
-first row). Pressing Tab or Shift+Tab
-changes the row's depth, moving its descendants with it.
+Height-syncing, Return-key row insertion, backspace/delete row removal,
+Tab/Shift+Tab indentation, and expand/collapse are the current focus of active
+work. As the user types, the measured text height flows back up the chain and
+is written to `row.height`, so the row resizes to fit its text. Pressing Return
+splits the row at the cursor into two rows, and focus moves to the new row.
+Pressing backspace or forward-delete at the start of a row removes that row
+(promoting its descendants one level), and focus moves to the row above (or
+below, for the first row). Pressing Tab or Shift+Tab changes the row's depth,
+moving its descendants with it. Clicking a parent row's chevron collapses or
+expands its descendants.
 
 ## Key design notes
 
