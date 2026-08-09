@@ -24,6 +24,8 @@ struct OutlinerView: View {
 		)
 	]
 	
+	/// A one-shot focus signal: set to the newly inserted row's id so it becomes
+	/// first responder, then cleared by `onChange(of: focusedRowId)`.
 	@State
 	private var focusedRowId: UUID?
 	
