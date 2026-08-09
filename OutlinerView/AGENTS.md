@@ -13,7 +13,8 @@ are expressed by the `depth` value rather than nested data structures.
 
 ## Architecture & data flow
 
-State flows down from a single owner, and measured geometry flows back up.
+State flows down from a single owner, while measured geometry and row-edit
+events flow back up.
 
 ```
 OutlinerView                     owns rows: [OutlinerRowModel]
@@ -30,10 +31,15 @@ OutlinerView                     owns rows: [OutlinerRowModel]
 - `OutlinerTextView` is an `NSTextView` subclass that invokes `onLayout` after
   each layout pass. The representable uses this callback to re-measure the
   content.
+- Pressing Return (without Shift) in a row fires `onInsertNewline`, which the
+  coordinator relays up to `OutlinerView.insertNewRow(in:textView:)`. That
+  splits the row's text at the cursor, inserts a new sibling row below it, and
+  sets `focusedRowId` to move focus to the new row.
 
-Height-syncing is the current focus of active work: as the user types, the
-measured text height flows back up the chain and is written to `row.height`, so
-the row resizes to fit its text.
+Height-syncing and Return-key row insertion are the current focus of active
+work. As the user types, the measured text height flows back up the chain and
+is written to `row.height`, so the row resizes to fit its text. Pressing Return
+splits the row at the cursor into two rows, and focus moves to the new row.
 
 ## Key design notes
 

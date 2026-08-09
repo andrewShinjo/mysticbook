@@ -21,6 +21,10 @@ struct OutlinerRowView: View {
 	
 	@Binding var row: OutlinerRowModel
 	
+	var isFocused: Bool
+	
+	var onInsertNewRow: ((UUID, NSTextView) -> Void)?
+	
 	var body: some View {
 		HStack(alignment: .top, spacing: rowSpacing) {
 			
@@ -40,7 +44,14 @@ struct OutlinerRowView: View {
 				.padding(.top, bulletTopPadding)
 			
 			// Editable text view
-			OutlinerTextViewRepresentable(height: $row.height, text: $row.text)
+			OutlinerTextViewRepresentable(
+				height: $row.height,
+				text: $row.text,
+				isFocused: isFocused,
+				onInsertNewRow: {
+					textView in onInsertNewRow?(row.id, textView)
+				},
+			)
 				.frame(height: row.height)
 		}
 		.padding(.vertical, rowVerticalPadding)
