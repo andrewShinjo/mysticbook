@@ -36,21 +36,23 @@ OutlinerView                     owns rows: [OutlinerRowModel]
   content.
 - Pressing Return (without Shift) in a row fires `onInsertNewline`, which the
   coordinator relays up to `OutlinerView.insertNewRow(in:textView:)`. That
-  splits the row's text at the cursor, inserts a new sibling row below it, and
-  sets `focusedRowId` to move focus to the new row.
+  splits the row's text at the cursor and inserts a new row below it — a
+  sibling, except when splitting the root row, where the new row is born as a
+  child at depth 1 (`max(row.depth, 1)`). It sets `focusedRowId` to move focus
+  to the new row.
 - Pressing the backspace or forward-delete key with the cursor at position 0
   (no selection) fires `onDeleteRow`, which the coordinator relays up to
   `OutlinerView.deleteRow`. That removes the row, keeps the outline from ever
   becoming empty (`rows.count > 1`), promotes the row's descendants one level
   (they become siblings of its former siblings), and sets `focusedRowId` to the
-  row above (or to the row below when the first row is removed).
+  row above (the root row can never be removed).
 - Pressing Tab fires `onIndentRow`, and pressing Shift+Tab fires
   `onOutdentRow`, which the coordinator relays up to
   `OutlinerView.indentRow`/`outdentRow`. Both change the row's depth by one
   level and cascade that change to the row's descendants: consecutive rows
   below it whose depth is greater than the row's depth before the edit, until a
-  row of equal or shallower depth stops the walk. Outdenting is a no-op at
-  depth 0.
+  row of equal or shallower depth stops the walk. Outdenting is a no-op for the
+  root row and floors non-root rows at depth 1.
 - Each row's expand/collapse chevron is rendered only when the row has
   children (`hasChildren`); leaf rows reserve the chevron's width with a blank
   spacer so bullets and text stay aligned. Clicking a parent's chevron toggles
@@ -68,10 +70,10 @@ work. As the user types, the measured text height flows back up the chain and
 is written to `row.height`, so the row resizes to fit its text. Pressing Return
 splits the row at the cursor into two rows, and focus moves to the new row.
 Pressing backspace or forward-delete at the start of a row removes that row
-(promoting its descendants one level), and focus moves to the row above (or
-below, for the first row). Pressing Tab or Shift+Tab changes the row's depth,
-moving its descendants with it. Clicking a parent row's chevron collapses or
-expands its descendants.
+(promoting its descendants one level), and focus moves to the row above (the
+root row can never be removed). Pressing Tab or Shift+Tab changes the row's
+depth, moving its descendants with it. Clicking a parent row's chevron
+collapses or expands its descendants.
 
 ## Key design notes
 
@@ -87,6 +89,17 @@ expands its descendants.
 - **Flat rows for now.** `rows` is a flat `[OutlinerRowModel]` rendered in a
   `LazyVStack`. If the outline becomes a true tree, the row model and the
   container will need to change together.
+- **Root row is `rows[0]`.** The topmost row lives at index 0 and is pinned to
+  depth 0; every other row is a descendant and sits at depth 1 or deeper. The
+  root can never be deleted, indented, or outdented (`deleteRow` and `indentRow`
+  guard on `index != 0`, `outdentRow` floors non-root rows at depth 1, and new
+  rows are created at `max(row.depth, 1)` so nothing is ever born at depth 0).
+  The root renders visually larger than the rest: its text uses a 30 pt bold
+  font (`rootFontSize`) while other rows use 14 pt regular (`editorFontSize`),
+  its height is still measured from `textView.font`, and it renders no bullet.
+  The root row is center-aligned so its expand/collapse chevron sits at the
+  row's vertical center and stays there as the row's text grows; other rows
+  remain top-aligned.
 - **Fixed geometry lives in named constants.** Indent width (16 pt per depth
-  level), chevron width, bullet size, paddings, and the chevron expand angle are
-  file-private constants, not magic numbers.
+  level), chevron width, bullet size, paddings, the chevron expand angle, and
+  the row font sizes are file-private constants, not magic numbers.

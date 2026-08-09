@@ -23,6 +23,12 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 	@Binding var height: CGFloat
 	@Binding var text: String
 	
+	/// The font size for the row's text; the root row uses a larger size.
+	var fontSize: CGFloat = editorFontSize
+	
+	/// Whether the row's text is bold; the root row renders bold.
+	var isBold: Bool = false
+	
 	var isFocused: Bool
 	
 	var onInsertNewRow: ((NSTextView) -> Void)?
@@ -73,7 +79,10 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 		
 		// Inset is padding.
 		textView.textContainerInset = .zero
-		textView.font = .systemFont(ofSize: editorFontSize)
+		textView.font = .systemFont(
+			ofSize: fontSize,
+			weight: isBold ? .bold : .regular
+		)
 		return textView
 	}
 	

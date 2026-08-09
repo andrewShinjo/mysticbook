@@ -10,6 +10,15 @@ import SwiftUI
 /// A placeholder height, in points, used for a row before it is measured.
 private let initialRowHeight: CGFloat = 20
 
+/// The index of the root row, which can never be deleted or indented.
+private let rootRowIndex = 0
+
+/// The depth of the root row; the root is the only row at depth 0.
+private let rootRowDepth = 0
+
+/// The shallowest depth a non-root row may have; rows are floored here.
+private let minimumRowDepth = 1
+
 /// The editable outline: a scrollable list of rows, each rendered by `OutlinerRowView`.
 struct OutlinerView: View {
 	
@@ -51,7 +60,9 @@ struct OutlinerView: View {
 		
 		let newRow = OutlinerRowModel(
 			text: after,
-			depth: row.depth,
+			// The root row (depth 0) is the only row at its depth; a row split
+			// off it must become its child at depth 1.
+			depth: max(row.depth, minimumRowDepth),
 			isExpanded: true,
 			hasChildren: false,
 			height: initialRowHeight
@@ -71,8 +82,7 @@ struct OutlinerView: View {
 	}
 	
 	/// Removes the row with the given id, promotes its descendants one level,
-	/// and moves focus to the row above it, or to the row below it when the
-	/// first row is removed.
+	/// and moves focus to the row above it.
 	private func deleteRow(_ rowId: UUID) {
 		
 		guard let index = rows.firstIndex(where: {
@@ -80,6 +90,9 @@ struct OutlinerView: View {
 		}) else {
 			return
 		}
+		
+		// The root row is the topmost row and can never be deleted.
+		guard index != rootRowIndex else { return }
 		
 		// Keep the outline from ever becoming empty.
 		guard rows.count > 1 else { return }
@@ -90,10 +103,8 @@ struct OutlinerView: View {
 		// The row's descendants become siblings of its former siblings.
 		shiftDescendantDepths(from: index, deeperThan: oldDepth, by: -1)
 		
-		let predecessorIndex = index - 1
-		let targetRow = predecessorIndex >= 0
-			? rows[predecessorIndex]
-			: rows[index]
+		// A row above always exists because the root row can never be deleted.
+		let targetRow = rows[index - 1]
 		
 		refreshHasChildren()
 		
@@ -110,6 +121,9 @@ struct OutlinerView: View {
 		}
 		
 		let oldDepth = rows[index].depth
+		
+		// The root row can never be indented.
+		guard index != rootRowIndex else { return }
 		
 		// A row can be indented only when the row that would become its parent
 		// sits directly above it and is exactly one depth level shallower than
@@ -137,7 +151,9 @@ struct OutlinerView: View {
 			return
 		}
 		
-		guard rows[index].depth > 0 else { return }
+		// Non-root rows bottom out at depth 1; the root row (depth 0) can
+		// never be outdented.
+		guard rows[index].depth > minimumRowDepth else { return }
 		
 		let oldDepth = rows[index].depth
 		rows[index].depth = oldDepth - 1
@@ -203,6 +219,7 @@ struct OutlinerView: View {
 					$row in
 					OutlinerRowView(
 						row: $row,
+						isRoot: row.depth == rootRowDepth,
 						isFocused: row.id == focusedRowId,
 						onInsertNewRow: insertNewRow,
 						onDeleteRow: deleteRow,
