@@ -23,6 +23,10 @@ private let chevronExpandedAngle: Double = 90
 private let editorFontSize: CGFloat = 14
 /// The 30 pt font size for the root row's text, which renders larger and bold.
 private let rootFontSize: CGFloat = 30
+/// Ghost text shown in a focused empty root row.
+private let rootPlaceholderText = "Untitled"
+/// Ghost text shown in a focused empty non-root row.
+private let rowPlaceholderText = "Write something..."
 
 /// Renders a single outline row: an indent, an expand/collapse chevron, a bullet, and an editable text view.
 struct OutlinerRowView: View {
@@ -86,6 +90,7 @@ struct OutlinerRowView: View {
 				text: $row.text,
 				fontSize: isRoot ? rootFontSize : editorFontSize,
 				isBold: isRoot,
+				placeholder: isRoot ? rootPlaceholderText : rowPlaceholderText,
 				isFocused: isFocused,
 				onFocusChange: onFocusChange,
 				onInsertNewRow: {

@@ -29,6 +29,9 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 	/// Whether the row's text is bold; the root row renders bold.
 	var isBold: Bool = false
 	
+	/// Ghost text drawn when the row is focused and empty.
+	var placeholder: String = ""
+	
 	var isFocused: Bool
 	
 	/// Called when the text view gains or loses first responder status.
@@ -75,6 +78,8 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 			context.coordinator.onFocusChange?(focused)
 		}
 		
+		textView.placeholder = placeholder
+		
 		textView.delegate = context.coordinator
 		textView.isHorizontallyResizable = false
 		textView.isVerticallyResizable = true
@@ -106,6 +111,8 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 		// Sync SwiftUI's focus intent into the text view before the async
 		// makeFirstResponder below runs, so programmatic focus is allowed.
 		(nsView as? OutlinerTextView)?.isRowFocused = isFocused
+		
+		(nsView as? OutlinerTextView)?.placeholder = placeholder
 		
 		context.coordinator.onInsertNewRow = onInsertNewRow
 		context.coordinator.onDeleteRow = onDeleteRow

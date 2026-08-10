@@ -7,6 +7,10 @@
 
 import AppKit
 
+/// Fallback font size for the placeholder when the text view has no font yet.
+private let placeholderFontSize: CGFloat = 14
+
+
 /// An `NSTextView` subclass that reports each completed layout pass to its owner.
 ///
 /// The outliner uses this callback to re-measure the text view's content height
@@ -30,6 +34,11 @@ final class OutlinerTextView: NSTextView {
 	
 	/// Invoked when the text view gains or loses first responder status.
 	var onFocusChange: ((Bool) -> Void)?
+	
+	/// Ghost text drawn when the row is focused and empty.
+	var placeholder: String = "" {
+		didSet { needsDisplay = true }
+	}
 	
 	/// Handles the Return key press.
 	override func insertNewline(_ sender: Any?) {
@@ -101,7 +110,25 @@ final class OutlinerTextView: NSTextView {
 	}
 	
 	/// Whether this row is the row SwiftUI intends to be focused.
-	var isRowFocused = false
+	var isRowFocused = false {
+		didSet { needsDisplay = true }
+	}
+	
+	/// Draws the placeholder ghost text when the row is focused and empty.
+	override func draw(_ dirtyRect: NSRect) {
+		super.draw(dirtyRect)
+		
+		guard string.isEmpty, isRowFocused, !placeholder.isEmpty else { return }
+		
+		let origin = textContainerOrigin
+		let x = origin.x + (textContainer?.lineFragmentPadding ?? 0)
+		let font = self.font ?? .systemFont(ofSize: placeholderFontSize)
+		let attributes: [NSAttributedString.Key: Any] = [
+			.font: font,
+			.foregroundColor: NSColor.placeholderTextColor,
+		]
+		(placeholder as NSString).draw(at: NSPoint(x: x, y: origin.y), withAttributes: attributes)
+	}
 	
 	/// Reports to `onFocusChange` when the text view becomes first responder.
 	override func becomeFirstResponder() -> Bool {
