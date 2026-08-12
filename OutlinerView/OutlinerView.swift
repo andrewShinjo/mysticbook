@@ -228,11 +228,11 @@ struct OutlinerView: View {
 			LazyVStack(alignment: .leading, spacing: 0) {
 				ForEach(visibleRowBindings, id: \.wrappedValue.id) {
 					$row in
-					OutlinerRowView(
-						row: $row,
-						isRoot: row.depth == rootRowDepth,
-						isFocused: row.id == focusedRowId,
-						onFocusChange: {
+				OutlinerRowView(
+					row: $row,
+					isRoot: row.depth == rootRowDepth,
+					isFocused: row.id == focusedRowId,
+					onFocusChange: {
 							updateFocus(for: row.id, focused: $0)
 						},
 						onInsertNewRow: insertNewRow,

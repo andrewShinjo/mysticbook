@@ -10,6 +10,9 @@ import SwiftUI
 private let rowSpacing: CGFloat = 4
 private let indentWidthPerDepth: CGFloat = 16
 private let chevronButtonWidth: CGFloat = 14
+/// Width of the drag handle; the handle always reserves its width so rows do
+/// not shift when it appears on hover.
+private let dragHandleWidth: CGFloat = 16
 private let bulletSize: CGFloat = 5
 private let bulletTopPadding: CGFloat = 5
 /// Opacity of a row's bullet while hovered; dimmer than the focused bullet.
@@ -42,6 +45,10 @@ struct OutlinerRowView: View {
 	@State
 	private var isHovered = false
 	
+	/// The row's underlying text view, used to build the drag preview.
+	@State
+	private var textView: OutlinerTextView?
+	
 	var onFocusChange: ((Bool) -> Void)?
 	
 	var onInsertNewRow: ((UUID, NSTextView) -> Void)?
@@ -58,6 +65,25 @@ struct OutlinerRowView: View {
 		HStack(alignment: isRoot ? .center : .top, spacing: rowSpacing) {
 			
 			Spacer().frame(width: CGFloat(row.depth) * indentWidthPerDepth)
+			
+			// Drag handle; the root row can never be dragged, so it renders none.
+			// Hidden until hovered, but always reserves its width so rows do not
+			// shift when it appears.
+			if !isRoot {
+				Image(systemName: "line.3.horizontal")
+					.font(.system(size: 12))
+					.foregroundStyle(.secondary)
+					.frame(width: dragHandleWidth, height: chevronButtonWidth + 2)
+					.opacity(isHovered ? 1 : 0)
+					.animation(.easeInOut(duration: bulletFadeDuration), value: isHovered)
+					.draggable(row.id.uuidString) {
+						if let textView, let image = snapshot(of: textView) {
+							Image(nsImage: image)
+								.fixedSize()
+								.offset(x: image.size.width / 2)
+						}
+					}
+			}
 			
 			// Expand/collapse button
 			if row.hasChildren {
@@ -105,6 +131,16 @@ struct OutlinerRowView: View {
 				onOutdentRow: {
 					onOutdentRow?(row.id)
 				},
+				onTextViewReady: {
+					newText in
+					// Defer the state write out of SwiftUI's update pass, which
+					// `updateNSView` runs during, to avoid mutating state mid-update.
+					DispatchQueue.main.async {
+						if textView !== newText {
+							textView = newText
+						}
+					}
+				},
 			)
 				.frame(height: row.height)
 		}
@@ -113,5 +149,44 @@ struct OutlinerRowView: View {
 		.frame(maxWidth: .infinity, alignment: .leading)
 		.contentShape(Rectangle())
 		.onHover { isHovered = $0 }
+	}
+	
+	/// Snapshot of a text view's rendered contents, used as the drag preview.
+	///
+	/// Prefers a bitmap snapshot; falls back to a PDF snapshot when the bitmap
+	/// comes out blank, which layer-backed text views sometimes do.
+	private func snapshot(of textView: NSTextView) -> NSImage? {
+		if let rep = textView.bitmapImageRepForCachingDisplay(in: textView.bounds) {
+			textView.cacheDisplay(in: textView.bounds, to: rep)
+			if hasVisibleContent(rep) {
+				let image = NSImage(size: rep.size)
+				image.addRepresentation(rep)
+				return image
+			}
+		}
+		let pdfData = textView.dataWithPDF(inside: textView.bounds)
+		return NSImage(data: pdfData)
+	}
+	
+	/// Whether a bitmap snapshot contains any non-transparent (or non-zero) pixels.
+	private func hasVisibleContent(_ rep: NSBitmapImageRep) -> Bool {
+		guard let data = rep.bitmapData else { return false }
+		let bytesPerRow = rep.bytesPerRow
+		let width = rep.pixelsWide
+		let height = rep.pixelsHigh
+		let samplesPerPixel = rep.samplesPerPixel
+		for row in 0..<height {
+			let rowPtr = data + row * bytesPerRow
+			for col in 0..<width {
+				let offset = col * samplesPerPixel
+				if rep.hasAlpha {
+					if rowPtr[offset + samplesPerPixel - 1] > 0 { return true }
+				}
+				else if rowPtr[offset] != 0 || rowPtr[offset + 1] != 0 || rowPtr[offset + 2] != 0 {
+					return true
+				}
+			}
+		}
+		return false
 	}
 }

@@ -45,6 +45,9 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 	
 	var onOutdentRow: (() -> Void)?
 	
+	/// Called with the underlying text view so callers can hold a reference.
+	var onTextViewReady: ((OutlinerTextView) -> Void)?
+	
 	/// Creates the view object, and configures its initial state.
 	func makeNSView(context: Context) -> NSTextView {
 		
@@ -119,6 +122,10 @@ struct OutlinerTextViewRepresentable: NSViewRepresentable {
 		context.coordinator.onIndentRow = onIndentRow
 		context.coordinator.onOutdentRow = onOutdentRow
 		context.coordinator.onFocusChange = onFocusChange
+		
+		if let outlineTextView = nsView as? OutlinerTextView {
+			onTextViewReady?(outlineTextView)
+		}
 		
 		if nsView.string != text {
 			nsView.string = text
