@@ -7,19 +7,11 @@
 
 import SwiftUI
 
-/// A placeholder height, in points, used for a row before it is measured.
 private let initialRowHeight: CGFloat = 20
-
-/// The index of the root row, which can never be deleted or indented.
 private let rootRowIndex = 0
-
-/// The depth of the root row; the root is the only row at depth 0.
 private let rootRowDepth = 0
-
-/// The shallowest depth a non-root row may have; rows are floored here.
 private let minimumRowDepth = 1
 
-/// The editable outline: a scrollable list of rows, each rendered by `OutlinerRowView`.
 struct OutlinerView: View {
 	
 	@State
@@ -33,12 +25,9 @@ struct OutlinerView: View {
 		)
 	]
 	
-	/// The id of the row whose text view currently holds first responder; `nil`
-	/// when no row is focused.
 	@State
 	private var focusedRowId: UUID?
 	
-	/// Splits the row's text at the cursor, and inserts a new sibling row below it.
 	private func insertNewRow(
 		in rowId: UUID,
 		textView: NSTextView
@@ -198,22 +187,23 @@ struct OutlinerView: View {
 		}
 	}
 	
-	/// The row bindings to render: consecutive rows whose depth is greater than
-	/// the nearest collapsed ancestor's depth are hidden until it expands.
-	private var visibleRowBindings: [Binding<OutlinerRowModel>] {
+	/// The full-array indices of the rows to render: consecutive rows whose
+	/// depth is greater than the nearest collapsed ancestor's depth are hidden
+	/// until it expands.
+	private var visibleRowIndices: [Int] {
 		
 		var collapsedDepth: Int?
-		var result: [Binding<OutlinerRowModel>] = []
+		var result: [Int] = []
 		
-		for binding in Array($rows) {
-			let row = binding.wrappedValue
+		for index in rows.indices {
+			let row = rows[index]
 			
 			if let depth = collapsedDepth, row.depth > depth {
 				continue
 			}
 			
 			collapsedDepth = nil
-			result.append(binding)
+			result.append(index)
 			
 			if row.hasChildren && !row.isExpanded {
 				collapsedDepth = row.depth
@@ -223,26 +213,101 @@ struct OutlinerView: View {
 		return result
 	}
 	
+	/// The row bindings to render, derived from the visible row indices.
+	private var visibleRowBindings: [Binding<OutlinerRowModel>] {
+		visibleRowIndices.map { $rows[$0] }
+	}
+	
+	/// Moves the dragged row, along with the hidden descendants it carries, to
+	/// a new visible position. The dragged row becomes a sibling of the row now
+	/// above it (a child of the root when it lands directly beneath it), while
+	/// its descendants keep their depth offsets relative to the row, preserving
+	/// the outline's tree shape.
+	///
+	/// The move arrives in visible-row indices, which the dragged row's hidden
+	/// descendants do not occupy; the full rows array is remapped both times.
+	private func moveRows(from source: IndexSet, to destination: Int) {
+		
+		// The root row is topmost and can never be dragged.
+		guard !source.contains(0), let sourceIndex = source.min() else { return }
+		
+		let visible = visibleRowIndices
+		guard sourceIndex < visible.count else { return }
+		
+		// Find the dragged row's subtree: the contiguous rows below it whose
+		// depth is greater than its own.
+		let startIndex = visible[sourceIndex]
+		let topDepth = rows[startIndex].depth
+		
+		var subtreeEnd = startIndex + 1
+		while subtreeEnd < rows.count && rows[subtreeEnd].depth > topDepth {
+			subtreeEnd += 1
+		}
+		
+		// Extract the subtree, then remap the visible indices over the rows
+		// that remain so the drop position lands correctly.
+		var subtree = Array(rows[startIndex..<subtreeEnd])
+		rows.removeSubrange(startIndex..<subtreeEnd)
+		
+		// The drop offset arrives relative to the array before the move, so
+		// shrink it by the one visible row the removal took, matching the
+		// semantics of `move(fromOffsets:toOffset:)`. A drop at the very top
+		// would place the row above the root, which must stay topmost; clamp it
+		// to just below the root.
+		var destination = destination
+		if sourceIndex < destination { destination -= 1 }
+		if destination <= 0 { destination = 1 }
+		
+		let remainingVisible = visibleRowIndices
+		let insertIndex: Int
+		if destination >= remainingVisible.count {
+			insertIndex = rows.endIndex
+		}
+		else {
+			insertIndex = remainingVisible[destination]
+		}
+		
+		// The subtree's top becomes a sibling of the row above the drop; rows
+		// below it keep their depth offsets, which preserves the invariant that
+		// a row's depth is at most one more than the row above it.
+		let baseDepth = insertIndex > 0
+			? max(rows[insertIndex - 1].depth, minimumRowDepth)
+			: minimumRowDepth
+		let offsets = subtree.map { $0.depth - topDepth }
+		for index in subtree.indices {
+			subtree[index].depth = baseDepth + offsets[index]
+		}
+		
+		rows.insert(contentsOf: subtree, at: insertIndex)
+		
+		refreshHasChildren()
+	}
+	
 	var body: some View {
-		ScrollView {
-			LazyVStack(alignment: .leading, spacing: 0) {
-				ForEach(visibleRowBindings, id: \.wrappedValue.id) {
-					$row in
+		List {
+			ForEach(visibleRowBindings, id: \.wrappedValue.id) {
+				$row in
 				OutlinerRowView(
 					row: $row,
 					isRoot: row.depth == rootRowDepth,
 					isFocused: row.id == focusedRowId,
 					onFocusChange: {
-							updateFocus(for: row.id, focused: $0)
-						},
-						onInsertNewRow: insertNewRow,
-						onDeleteRow: deleteRow,
-						onIndentRow: indentRow,
-						onOutdentRow: outdentRow
-					)
-				}
+						updateFocus(for: row.id, focused: $0)
+					},
+					onInsertNewRow: insertNewRow,
+					onDeleteRow: deleteRow,
+					onIndentRow: indentRow,
+					onOutdentRow: outdentRow
+				)
+				.listRowSeparator(.hidden)
+				.listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+				.listRowBackground(Color.clear)
+				.moveDisabled(row.depth == rootRowDepth)
 			}
+			.onMove(perform: moveRows)
 		}
+		.listStyle(.plain)
+		.scrollContentBackground(.hidden)
 	}
 }
 

@@ -109,6 +109,22 @@ final class OutlinerTextView: NSTextView {
 		onLayout?()
 	}
 	
+	/// Refuses all drops into this text view.
+	///
+	/// An editable text view registers itself as a text drop destination, which
+	/// would swallow a row's drag before the row's SwiftUI drop handler sees it.
+	override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+		[]
+	}
+	
+	override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+		[]
+	}
+	
+	override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+		false
+	}
+	
 	/// Whether this row is the row SwiftUI intends to be focused.
 	var isRowFocused = false {
 		didSet { needsDisplay = true }
